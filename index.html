@@ -1,0 +1,1547 @@
+<title>Milkflow</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Milkflow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Fraunces:opsz,wght@9..144,300..700&display=swap" rel="stylesheet">
+
+<style>
+/* ── Tokens ── */
+:root {
+  --bg: #F7F4F0;
+  --surface: #FFFFFF;
+  --surface-raised: #FFFFFF;
+  --text-primary: #2C2636;
+  --text-secondary: #7A7286;
+  --text-muted: #AEA6BC;
+  --accent: #3A9B6B;
+  --accent-hover: #2E8A5C;
+  --accent-soft: #E4F3EC;
+  --accent-wash: rgba(58,155,107,0.10);
+  --secondary: #4A85C2;
+  --secondary-hover: #3B76B3;
+  --secondary-soft: #E4EEF6;
+  --secondary-wash: rgba(74,133,194,0.10);
+  --border: #E8E4DF;
+  --border-subtle: #F0ECE7;
+  --danger: #D4574E;
+  --danger-soft: #FBEAE9;
+  --shadow: rgba(44,38,54,0.06);
+  --chart-surface: #FCFBFA;
+  --chart-grid: #E8E4DF;
+  --chart-axis: #C5BFCC;
+  --chart-expressed: #3A9B6B;
+  --chart-formula: #4A85C2;
+  --chart-total-line: #2C2636;
+  --nav-bg: rgba(247,244,240,0.85);
+  --sheet-backdrop: rgba(44,38,54,0.35);
+  --tab-inactive: #AEA6BC;
+  --tab-active: #3A9B6B;
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-body: 'DM Sans', system-ui, -apple-system, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1A171F;
+    --surface: #252129;
+    --surface-raised: #2F2A35;
+    --text-primary: #EDE8F0;
+    --text-secondary: #9A92A5;
+    --text-muted: #6A6275;
+    --accent: #3EA87A;
+    --accent-hover: #4FBD8E;
+    --accent-soft: #1E3530;
+    --accent-wash: rgba(62,168,122,0.12);
+    --secondary: #4A8AC8;
+    --secondary-hover: #5C9AD8;
+    --secondary-soft: #1E2A3A;
+    --secondary-wash: rgba(74,138,200,0.12);
+    --border: #3A3540;
+    --border-subtle: #302B36;
+    --danger: #E06B63;
+    --danger-soft: #3A2220;
+    --shadow: rgba(0,0,0,0.2);
+    --chart-surface: #1F1B24;
+    --chart-grid: #332E3A;
+    --chart-axis: #4A4454;
+    --chart-expressed: #3EA87A;
+    --chart-formula: #4A8AC8;
+    --chart-total-line: #EDE8F0;
+    --nav-bg: rgba(26,23,31,0.88);
+    --sheet-backdrop: rgba(0,0,0,0.5);
+    --tab-inactive: #6A6275;
+    --tab-active: #3EA87A;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1A171F;
+  --surface: #252129;
+  --surface-raised: #2F2A35;
+  --text-primary: #EDE8F0;
+  --text-secondary: #9A92A5;
+  --text-muted: #6A6275;
+  --accent: #3EA87A;
+  --accent-hover: #4FBD8E;
+  --accent-soft: #1E3530;
+  --accent-wash: rgba(62,168,122,0.12);
+  --secondary: #4A8AC8;
+  --secondary-hover: #5C9AD8;
+  --secondary-soft: #1E2A3A;
+  --secondary-wash: rgba(74,138,200,0.12);
+  --border: #3A3540;
+  --border-subtle: #302B36;
+  --danger: #E06B63;
+  --danger-soft: #3A2220;
+  --shadow: rgba(0,0,0,0.2);
+  --chart-surface: #1F1B24;
+  --chart-grid: #332E3A;
+  --chart-axis: #4A4454;
+  --chart-expressed: #3EA87A;
+  --chart-formula: #4A8AC8;
+  --chart-total-line: #EDE8F0;
+  --nav-bg: rgba(26,23,31,0.88);
+  --sheet-backdrop: rgba(0,0,0,0.5);
+  --tab-inactive: #6A6275;
+  --tab-active: #3EA87A;
+}
+
+/* ── Reset & base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  padding: 0;
+  min-height: 100dvh;
+  min-height: 100vh;
+}
+
+/* ── App shell ── */
+#app {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* ── Header ── */
+.app-header {
+  padding: env(safe-area-inset-top, 12px) 20px 0;
+  padding-bottom: 8px;
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.app-header h1 {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+.app-header .date-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+/* ── Main scrollable area ── */
+.app-main {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-block: 12px 100px;
+  padding-inline: 20px;
+}
+
+/* ── Views ── */
+.view { display: none; }
+.view.active { display: block; }
+
+/* ── Hero stat ── */
+.hero-stat {
+  text-align: center;
+  padding: 28px 0 20px;
+}
+.hero-stat .hero-value {
+  font-family: var(--font-display);
+  font-size: 56px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--text-primary);
+  letter-spacing: -0.03em;
+}
+.hero-stat .hero-unit {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.hero-stat .hero-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+}
+
+/* ── Stat tiles row ── */
+.stat-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.stat-tile {
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 1px 3px var(--shadow);
+}
+.stat-tile .tile-label {
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.stat-tile .tile-value {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.stat-tile .tile-unit {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-left: 2px;
+}
+.stat-tile .tile-count {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+.stat-tile.expressed .tile-dot { color: var(--accent); }
+.stat-tile.formula .tile-dot { color: var(--secondary); }
+.stat-tile.expressed .tile-value { color: var(--accent); }
+.stat-tile.formula .tile-value { color: var(--secondary); }
+
+/* ── Section headings ── */
+.section-heading {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ── Entry list ── */
+.entry-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.entry-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border-radius: 12px;
+  position: relative;
+}
+.entry-item:first-child { border-radius: 12px 12px 4px 4px; }
+.entry-item:last-child { border-radius: 4px 4px 12px 12px; }
+.entry-item:only-child { border-radius: 12px; }
+.entry-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.entry-dot.expressed { background: var(--accent); }
+.entry-dot.formula { background: var(--secondary); }
+.entry-time {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  width: 52px;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.entry-type {
+  font-size: 13px;
+  color: var(--text-secondary);
+  flex: 1;
+}
+.entry-ml {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.entry-ml-unit {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-left: 1px;
+}
+.entry-delete {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 18px;
+  padding: 4px 0 4px 8px;
+  cursor: pointer;
+  line-height: 1;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+.entry-delete:hover, .entry-delete:active { opacity: 1; color: var(--danger); }
+
+/* ── Empty state ── */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--text-muted);
+}
+.empty-state .empty-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+  opacity: 0.6;
+}
+.empty-state p {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ── Date nav ── */
+.date-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+.date-nav-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 20px;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 8px;
+  line-height: 1;
+  transition: background 0.15s;
+}
+.date-nav-btn:hover { background: var(--accent-wash); }
+.date-nav-btn:disabled { opacity: 0.3; cursor: default; }
+.date-nav-btn:disabled:hover { background: none; }
+.date-nav-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  min-width: 140px;
+  text-align: center;
+}
+
+/* ── FAB ── */
+.fab {
+  position: fixed;
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #FFF;
+  border: none;
+  font-size: 28px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(58,155,107,0.35);
+  z-index: 20;
+  transition: transform 0.15s, box-shadow 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.fab:active { transform: translateX(-50%) scale(0.92); }
+
+/* ── Bottom sheet ── */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--sheet-backdrop);
+  z-index: 50;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+.sheet-backdrop.open { opacity: 1; pointer-events: auto; }
+.sheet {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, 100%);
+  width: 100%;
+  max-width: 430px;
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  z-index: 51;
+  transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+  padding: 0 20px calc(20px + env(safe-area-inset-bottom, 0px));
+  max-height: 85dvh;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+.sheet-backdrop.open + .sheet,
+.sheet.open { transform: translate(-50%, 0); }
+.sheet-handle {
+  width: 36px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--border);
+  margin: 10px auto 16px;
+}
+.sheet-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* ── Form ── */
+.form-segment-toggle {
+  display: flex;
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 3px;
+  margin-bottom: 20px;
+}
+.form-segment-toggle button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.form-segment-toggle button.active {
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: 0 1px 3px var(--shadow);
+}
+.form-group {
+  margin-bottom: 16px;
+}
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.form-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--text-primary);
+  background: var(--bg);
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.form-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-wash);
+}
+.form-input::placeholder { color: var(--text-muted); }
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.form-submit {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  color: #FFF;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background 0.15s, transform 0.1s;
+}
+.form-submit:active { transform: scale(0.98); }
+.form-submit.expressed-btn { background: var(--accent); }
+.form-submit.expressed-btn:hover { background: var(--accent-hover); }
+.form-submit.formula-btn { background: var(--secondary); }
+.form-submit.formula-btn:hover { background: var(--secondary-hover); }
+
+/* ── Quick presets ── */
+.quick-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+.quick-preset {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.quick-preset:hover, .quick-preset:active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-wash);
+}
+
+/* ── Bottom nav ── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 430px;
+  background: var(--nav-bg);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px));
+  z-index: 30;
+}
+.nav-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--tab-inactive);
+  transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.nav-tab.active { color: var(--tab-active); }
+.nav-tab svg { width: 24px; height: 24px; }
+.nav-tab span {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ── Charts view ── */
+.chart-mode-toggle {
+  display: flex;
+  background: var(--border-subtle);
+  border-radius: 12px;
+  padding: 3px;
+  margin-bottom: 16px;
+}
+.chart-mode-btn {
+  flex: 1;
+  padding: 9px 0;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.chart-mode-btn.active {
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: 0 1px 3px var(--shadow);
+}
+.chart-range-pills {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.range-pill {
+  padding: 7px 16px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.range-pill.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #FFF;
+}
+.chart-card {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 1px 3px var(--shadow);
+  margin-bottom: 16px;
+}
+.chart-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+.chart-card-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+.chart-legend {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.chart-legend-swatch {
+  width: 12px;
+  height: 3px;
+  border-radius: 2px;
+}
+.chart-legend-swatch.expressed { background: var(--chart-expressed); }
+.chart-legend-swatch.formula { background: var(--chart-formula); }
+
+.chart-svg {
+  width: 100%;
+  display: block;
+}
+
+/* Weekly WoW row */
+.wow-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.wow-tile {
+  flex: 1 1 0;
+  min-width: 90px;
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: center;
+}
+.wow-tile-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.wow-tile-value {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.wow-tile-unit {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  margin-left: 1px;
+}
+.wow-tile-delta {
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 3px;
+  font-variant-numeric: tabular-nums;
+}
+.wow-tile-delta.up { color: var(--accent); }
+.wow-tile-delta.down { color: var(--danger); }
+.wow-tile-delta.flat { color: var(--text-muted); }
+
+/* Chart tooltip */
+.chart-tooltip {
+  position: absolute;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  box-shadow: 0 4px 12px var(--shadow);
+  pointer-events: none;
+  z-index: 40;
+  opacity: 0;
+  transition: opacity 0.12s;
+  white-space: nowrap;
+}
+.chart-tooltip.visible { opacity: 1; }
+.chart-tooltip .tt-date {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+.chart-tooltip .tt-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 3px;
+}
+.chart-tooltip .tt-swatch {
+  width: 8px;
+  height: 3px;
+  border-radius: 1px;
+}
+.chart-tooltip .tt-label { color: var(--text-secondary); }
+.chart-tooltip .tt-val {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-left: auto;
+  padding-left: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top, 0px));
+  left: 50%;
+  transform: translateX(-50%) translateY(-80px);
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 16px var(--shadow);
+  z-index: 100;
+  transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+  pointer-events: none;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ── Utilities ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+</style>
+
+<div id="app">
+  <header class="app-header">
+    <h1>Milkflow</h1>
+    <div class="date-label" id="headerDate"></div>
+  </header>
+
+  <div class="app-main">
+    <!-- ═══ TODAY VIEW ═══ -->
+    <section class="view active" id="view-today">
+      <div class="date-nav">
+        <button class="date-nav-btn" id="prevDay" aria-label="Previous day">&#8249;</button>
+        <span class="date-nav-label" id="dateNavLabel"></span>
+        <button class="date-nav-btn" id="nextDay" aria-label="Next day">&#8250;</button>
+      </div>
+
+      <div class="hero-stat">
+        <div class="hero-value" id="heroTotal">0</div>
+        <div class="hero-unit">ml total</div>
+        <div class="hero-label">baby's intake today</div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-tile expressed">
+          <div class="tile-label"><span class="tile-dot">&#9679;</span> Expressed</div>
+          <div class="tile-value" id="expressedTotal">0<span class="tile-unit">ml</span></div>
+          <div class="tile-count" id="expressedCount">0 sessions</div>
+        </div>
+        <div class="stat-tile formula">
+          <div class="tile-label"><span class="tile-dot">&#9679;</span> Formula</div>
+          <div class="tile-value" id="formulaTotal">0<span class="tile-unit">ml</span></div>
+          <div class="tile-count" id="formulaCount">0 feeds</div>
+        </div>
+      </div>
+
+      <div class="section-heading">
+        <span id="entriesHeading">Today's entries</span>
+      </div>
+      <div id="entryList"></div>
+    </section>
+
+    <!-- ═══ CHARTS VIEW ═══ -->
+    <section class="view" id="view-charts">
+      <div class="chart-mode-toggle" id="chartModeToggle">
+        <button class="chart-mode-btn active" data-mode="daily">Daily</button>
+        <button class="chart-mode-btn" data-mode="weekly">Weekly</button>
+      </div>
+
+      <!-- Daily sub-view -->
+      <div id="chartDailySection">
+        <div class="chart-range-pills">
+          <button class="range-pill active" data-range="7">7 days</button>
+          <button class="range-pill" data-range="14">14 days</button>
+          <button class="range-pill" data-range="30">30 days</button>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-card-title">Daily intake</div>
+          <div class="chart-card-subtitle">Expressed + formula per day</div>
+          <div class="chart-legend">
+            <span class="chart-legend-item"><span class="chart-legend-swatch expressed"></span> Expressed</span>
+            <span class="chart-legend-item"><span class="chart-legend-swatch formula"></span> Formula</span>
+          </div>
+          <div style="position:relative;" id="chartStackedWrap"></div>
+        </div>
+
+        <div class="chart-card" id="chartTotalCard">
+          <div class="chart-card-title">Total daily intake</div>
+          <div class="chart-card-subtitle">Combined ml per day</div>
+          <div style="position:relative;" id="chartTotalWrap"></div>
+        </div>
+      </div>
+
+      <!-- Weekly sub-view -->
+      <div id="chartWeeklySection" hidden>
+        <div class="chart-card" id="chartWeeklyCard">
+          <div class="chart-card-title">Weekly overview</div>
+          <div class="chart-card-subtitle">Total ml per week — expressed vs formula</div>
+          <div class="chart-legend">
+            <span class="chart-legend-item"><span class="chart-legend-swatch expressed"></span> Expressed</span>
+            <span class="chart-legend-item"><span class="chart-legend-swatch formula"></span> Formula</span>
+          </div>
+          <div style="position:relative;" id="chartWeeklyWrap"></div>
+          <div id="weeklyWowRow" class="wow-row"></div>
+        </div>
+      </div>
+
+      <div id="chartEmpty" hidden>
+        <div class="empty-state">
+          <div class="empty-icon">&#128200;</div>
+          <p>Log a few days of data and your<br>trends will appear here.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- FAB -->
+  <button class="fab" id="fabAdd" aria-label="Add entry">+</button>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav">
+    <button class="nav-tab active" data-view="view-today" aria-label="Today">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Today</span>
+    </button>
+    <button class="nav-tab" data-view="view-charts" aria-label="Charts">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span>Charts</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ═══ Add Entry Sheet ═══ -->
+<div class="sheet-backdrop" id="sheetBackdrop"></div>
+<div class="sheet" id="addSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">Log entry</div>
+
+  <div class="form-segment-toggle" id="entryTypeToggle">
+    <button class="active" data-type="expressed">Expressed</button>
+    <button data-type="formula">Formula</button>
+  </div>
+
+  <form id="addForm" autocomplete="off">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" for="entryDate">Date</label>
+        <input class="form-input" type="date" id="entryDate">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="entryTime">Time</label>
+        <input class="form-input" type="time" id="entryTime">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="entryMl">Amount (ml)</label>
+      <input class="form-input" type="number" id="entryMl" inputmode="numeric" placeholder="e.g. 120" min="0" max="999" step="1">
+      <div class="quick-presets">
+        <button type="button" class="quick-preset" data-ml="30">30</button>
+        <button type="button" class="quick-preset" data-ml="60">60</button>
+        <button type="button" class="quick-preset" data-ml="90">90</button>
+        <button type="button" class="quick-preset" data-ml="120">120</button>
+        <button type="button" class="quick-preset" data-ml="150">150</button>
+        <button type="button" class="quick-preset" data-ml="180">180</button>
+      </div>
+    </div>
+    <button type="submit" class="form-submit expressed-btn" id="submitBtn">Log expressed milk</button>
+  </form>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ── State ──
+  let viewDate = todayStr();
+  let chartRange = 7;
+  let entryType = 'expressed';
+
+  // ── Storage helpers ──
+  function loadData() {
+    try {
+      const raw = localStorage.getItem('milkflow_data');
+      if (raw) return JSON.parse(raw);
+    } catch(e) {}
+    return { entries: [] };
+  }
+  function saveData(data) {
+    try { localStorage.setItem('milkflow_data', JSON.stringify(data)); } catch(e) {}
+  }
+
+  // ── Date helpers ──
+  function todayStr() {
+    return new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+  }
+  function addDays(dateStr, n) {
+    const d = new Date(dateStr + 'T12:00:00');
+    d.setDate(d.getDate() + n);
+    return d.toLocaleDateString('en-CA');
+  }
+  function formatDateNav(dateStr) {
+    const d = new Date(dateStr + 'T12:00:00');
+    const today = todayStr();
+    const yesterday = addDays(today, -1);
+    if (dateStr === today) return 'Today';
+    if (dateStr === yesterday) return 'Yesterday';
+    return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+  function formatDateShort(dateStr) {
+    const d = new Date(dateStr + 'T12:00:00');
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
+  function formatHeaderDate() {
+    return new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+  function formatTime(timeStr) {
+    const [h, m] = timeStr.split(':');
+    return h + ':' + m;
+  }
+  function nowTime() {
+    const d = new Date();
+    return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  }
+
+  // ── DOM refs ──
+  const $ = id => document.getElementById(id);
+  const headerDate = $('headerDate');
+  const heroTotal = $('heroTotal');
+  const expressedTotal = $('expressedTotal');
+  const formulaTotal = $('formulaTotal');
+  const expressedCount = $('expressedCount');
+  const formulaCount = $('formulaCount');
+  const entryList = $('entryList');
+  const dateNavLabel = $('dateNavLabel');
+  const entriesHeading = $('entriesHeading');
+  const prevDayBtn = $('prevDay');
+  const nextDayBtn = $('nextDay');
+  const fabAdd = $('fabAdd');
+  const sheetBackdrop = $('sheetBackdrop');
+  const addSheet = $('addSheet');
+  const addForm = $('addForm');
+  const entryDateInput = $('entryDate');
+  const entryTimeInput = $('entryTime');
+  const entryMlInput = $('entryMl');
+  const submitBtn = $('submitBtn');
+  const toast = $('toast');
+  const chartEmpty = $('chartEmpty');
+
+  // ── Init header ──
+  headerDate.textContent = formatHeaderDate();
+
+  // ── View switching ──
+  document.querySelectorAll('.nav-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      tab.classList.add('active');
+      $(tab.dataset.view).classList.add('active');
+      if (tab.dataset.view === 'view-charts') renderCharts();
+    });
+  });
+
+  // ── Date navigation ──
+  function updateDateNav() {
+    dateNavLabel.textContent = formatDateNav(viewDate);
+    nextDayBtn.disabled = (viewDate >= todayStr());
+    const isToday = viewDate === todayStr();
+    entriesHeading.textContent = isToday ? "Today's entries" : formatDateNav(viewDate) + "'s entries";
+  }
+  prevDayBtn.addEventListener('click', () => { viewDate = addDays(viewDate, -1); renderToday(); });
+  nextDayBtn.addEventListener('click', () => { viewDate = addDays(viewDate, 1); renderToday(); });
+
+  // ── Render today view ──
+  function renderToday() {
+    updateDateNav();
+    const data = loadData();
+    const dayEntries = data.entries
+      .filter(e => e.date === viewDate)
+      .sort((a, b) => a.time.localeCompare(b.time));
+
+    const expressedEntries = dayEntries.filter(e => e.type === 'expressed');
+    const formulaEntries = dayEntries.filter(e => e.type === 'formula');
+    const expSum = expressedEntries.reduce((s, e) => s + e.ml, 0);
+    const forSum = formulaEntries.reduce((s, e) => s + e.ml, 0);
+    const total = expSum + forSum;
+
+    heroTotal.textContent = total;
+    expressedTotal.innerHTML = expSum + '<span class="tile-unit">ml</span>';
+    formulaTotal.innerHTML = forSum + '<span class="tile-unit">ml</span>';
+    expressedCount.textContent = expressedEntries.length + ' session' + (expressedEntries.length !== 1 ? 's' : '');
+    formulaCount.textContent = formulaEntries.length + ' feed' + (formulaEntries.length !== 1 ? 's' : '');
+
+    if (dayEntries.length === 0) {
+      entryList.innerHTML = '<div class="empty-state"><div class="empty-icon">&#127868;</div><p>No entries yet.<br>Tap + to log your first one.</p></div>';
+      return;
+    }
+
+    entryList.innerHTML = dayEntries.map(e => `
+      <div class="entry-item" data-id="${e.id}">
+        <span class="entry-dot ${e.type}"></span>
+        <span class="entry-time">${formatTime(e.time)}</span>
+        <span class="entry-type">${e.type === 'expressed' ? 'Expressed' : 'Formula'}</span>
+        <span class="entry-ml">${e.ml}<span class="entry-ml-unit">ml</span></span>
+        <button class="entry-delete" aria-label="Delete entry">&times;</button>
+      </div>
+    `).join('');
+
+    // Delete handlers
+    entryList.querySelectorAll('.entry-delete').forEach(btn => {
+      btn.addEventListener('click', (ev) => {
+        const item = ev.target.closest('.entry-item');
+        const id = item.dataset.id;
+        const data = loadData();
+        data.entries = data.entries.filter(e => e.id !== id);
+        saveData(data);
+        item.style.opacity = '0';
+        item.style.transform = 'translateX(40px)';
+        item.style.transition = 'all 0.2s';
+        setTimeout(() => renderToday(), 220);
+      });
+    });
+  }
+
+  // ── Sheet open/close ──
+  function openSheet() {
+    entryDateInput.value = viewDate;
+    entryTimeInput.value = nowTime();
+    entryMlInput.value = '';
+    sheetBackdrop.classList.add('open');
+    addSheet.classList.add('open');
+    setTimeout(() => entryMlInput.focus(), 350);
+  }
+  function closeSheet() {
+    sheetBackdrop.classList.remove('open');
+    addSheet.classList.remove('open');
+  }
+  fabAdd.addEventListener('click', openSheet);
+  sheetBackdrop.addEventListener('click', closeSheet);
+
+  // ── Entry type toggle ──
+  document.querySelectorAll('#entryTypeToggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#entryTypeToggle button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      entryType = btn.dataset.type;
+      if (entryType === 'expressed') {
+        submitBtn.textContent = 'Log expressed milk';
+        submitBtn.className = 'form-submit expressed-btn';
+      } else {
+        submitBtn.textContent = 'Log formula';
+        submitBtn.className = 'form-submit formula-btn';
+      }
+    });
+  });
+
+  // ── Quick presets ──
+  document.querySelectorAll('.quick-preset').forEach(btn => {
+    btn.addEventListener('click', () => {
+      entryMlInput.value = btn.dataset.ml;
+    });
+  });
+
+  // ── Form submit ──
+  addForm.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const ml = parseInt(entryMlInput.value, 10);
+    if (!ml || ml <= 0) { entryMlInput.focus(); return; }
+    const date = entryDateInput.value || todayStr();
+    const time = entryTimeInput.value || nowTime();
+
+    const data = loadData();
+    data.entries.push({
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      type: entryType,
+      date: date,
+      time: time,
+      ml: ml
+    });
+    saveData(data);
+
+    closeSheet();
+    viewDate = date;
+    renderToday();
+    showToast((entryType === 'expressed' ? 'Expressed' : 'Formula') + ' — ' + ml + ' ml logged');
+  });
+
+  // ── Toast ──
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2200);
+  }
+
+  // ── Chart mode toggle (Daily / Weekly) ──
+  let chartMode = 'daily';
+  document.querySelectorAll('.chart-mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.chart-mode-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      chartMode = btn.dataset.mode;
+      $('chartDailySection').hidden = chartMode !== 'daily';
+      $('chartWeeklySection').hidden = chartMode !== 'weekly';
+      renderCharts();
+    });
+  });
+
+  // ── Chart range pills ──
+  document.querySelectorAll('.range-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.range-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      chartRange = parseInt(pill.dataset.range, 10);
+      renderCharts();
+    });
+  });
+
+  // ── Chart rendering ──
+  function getDailyTotals(days) {
+    const data = loadData();
+    const result = [];
+    const today = todayStr();
+    for (let i = days - 1; i >= 0; i--) {
+      const d = addDays(today, -i);
+      const dayEntries = data.entries.filter(e => e.date === d);
+      const expressed = dayEntries.filter(e => e.type === 'expressed').reduce((s, e) => s + e.ml, 0);
+      const formula = dayEntries.filter(e => e.type === 'formula').reduce((s, e) => s + e.ml, 0);
+      result.push({ date: d, expressed, formula, total: expressed + formula });
+    }
+    return result;
+  }
+
+  function getWeeklyTotals(numWeeks) {
+    const data = loadData();
+    const today = new Date(todayStr() + 'T12:00:00');
+    const dow = today.getDay() === 0 ? 7 : today.getDay(); // Mon=1
+    const weeks = [];
+    for (let w = numWeeks - 1; w >= 0; w--) {
+      const weekEnd = new Date(today);
+      weekEnd.setDate(today.getDate() - (dow - 7) - w * 7); // Sunday end
+      const weekStart = new Date(weekEnd);
+      weekStart.setDate(weekEnd.getDate() - 6); // Monday start
+      // For current week, end is today
+      const actualEnd = w === 0 ? today : weekEnd;
+      let expressed = 0, formula = 0;
+      for (let d = new Date(weekStart); d <= actualEnd; d.setDate(d.getDate() + 1)) {
+        const ds = d.toLocaleDateString('en-CA');
+        const dayEntries = data.entries.filter(e => e.date === ds);
+        expressed += dayEntries.filter(e => e.type === 'expressed').reduce((s, e) => s + e.ml, 0);
+        formula += dayEntries.filter(e => e.type === 'formula').reduce((s, e) => s + e.ml, 0);
+      }
+      const startStr = weekStart.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+      const endStr = actualEnd.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+      weeks.push({
+        label: startStr + ' – ' + endStr,
+        shortLabel: startStr,
+        expressed, formula,
+        total: expressed + formula,
+        isCurrent: w === 0
+      });
+    }
+    return weeks;
+  }
+
+  function renderCharts() {
+    const data = loadData();
+    const hasData = data.entries.length > 0;
+
+    if (!hasData) {
+      $('chartDailySection').hidden = true;
+      $('chartWeeklySection').hidden = true;
+      chartEmpty.hidden = false;
+      return;
+    }
+    chartEmpty.hidden = true;
+    $('chartDailySection').hidden = chartMode !== 'daily';
+    $('chartWeeklySection').hidden = chartMode !== 'weekly';
+
+    if (chartMode === 'daily') {
+      const totals = getDailyTotals(chartRange);
+      renderStackedChart($('chartStackedWrap'), totals);
+      renderTotalChart($('chartTotalWrap'), totals);
+    } else {
+      renderWeeklyChart($('chartWeeklyWrap'), $('weeklyWowRow'));
+    }
+  }
+
+  function buildSvgChart(data, H, tickCount, drawContent) {
+    const W = 360;
+    const pad = { top: 12, right: 12, bottom: 32, left: 40 };
+    const plotW = W - pad.left - pad.right;
+    const plotH = H - pad.top - pad.bottom;
+    const maxVal = Math.max(20, ...data.map(d => d.total)) * 1.12;
+    const xStep = data.length > 1 ? plotW / (data.length - 1) : plotW / 2;
+    const x = i => pad.left + i * xStep;
+    const y = v => pad.top + plotH - (v / maxVal) * plotH;
+    const ticks = niceYTicks(maxVal, tickCount);
+
+    let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" class="chart-svg" style="overflow:visible">`;
+
+    // Gridlines
+    ticks.forEach(t => {
+      svg += `<line x1="${pad.left}" x2="${W - pad.right}" y1="${y(t)}" y2="${y(t)}" stroke="var(--chart-grid)" stroke-width="1"/>`;
+      svg += `<text x="${pad.left - 6}" y="${y(t) + 4}" text-anchor="end" fill="var(--text-muted)" font-size="10" font-family="var(--font-body)" style="font-variant-numeric:tabular-nums">${t}</text>`;
+    });
+    svg += `<line x1="${pad.left}" x2="${W - pad.right}" y1="${y(0)}" y2="${y(0)}" stroke="var(--chart-axis)" stroke-width="1"/>`;
+
+    svg += drawContent(x, y, pad, plotH);
+
+    // X-axis labels
+    const labelEvery = data.length > 14 ? 3 : data.length > 8 ? 2 : 1;
+    data.forEach((d, i) => {
+      if (i % labelEvery === 0 || i === data.length - 1) {
+        svg += `<text x="${x(i)}" y="${H - 4}" text-anchor="middle" fill="var(--text-muted)" font-size="10" font-family="var(--font-body)">${formatDateShort(d.date)}</text>`;
+      }
+    });
+
+    // Hit targets
+    data.forEach((d, i) => {
+      const hitW = Math.max(xStep, 30);
+      svg += `<rect x="${x(i) - hitW/2}" y="${pad.top}" width="${hitW}" height="${plotH}" fill="transparent" data-idx="${i}" class="chart-hit"/>`;
+    });
+
+    svg += '</svg>';
+    return svg;
+  }
+
+  function renderStackedChart(wrap, data) {
+    let svgContent = buildSvgChart(data, 200, 4, (x, y, pad, plotH) => {
+      let s = '';
+      if (data.length > 1) {
+        // Formula area (bottom)
+        let fp = `M${x(0)},${y(data[0].formula)}`;
+        for (let i = 1; i < data.length; i++) fp += `L${x(i)},${y(data[i].formula)}`;
+        fp += `L${x(data.length-1)},${y(0)}L${x(0)},${y(0)}Z`;
+        s += `<path d="${fp}" fill="var(--chart-formula)" opacity="0.12"/>`;
+        let fl = `M${x(0)},${y(data[0].formula)}`;
+        for (let i = 1; i < data.length; i++) fl += `L${x(i)},${y(data[i].formula)}`;
+        s += `<path d="${fl}" fill="none" stroke="var(--chart-formula)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+
+        // Expressed area (stacked on top)
+        let tp = `M${x(0)},${y(data[0].total)}`;
+        for (let i = 1; i < data.length; i++) tp += `L${x(i)},${y(data[i].total)}`;
+        for (let i = data.length - 1; i >= 0; i--) tp += `L${x(i)},${y(data[i].formula)}`;
+        tp += 'Z';
+        s += `<path d="${tp}" fill="var(--chart-expressed)" opacity="0.12"/>`;
+        let tl = `M${x(0)},${y(data[0].total)}`;
+        for (let i = 1; i < data.length; i++) tl += `L${x(i)},${y(data[i].total)}`;
+        s += `<path d="${tl}" fill="none" stroke="var(--chart-expressed)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+      }
+      // Dots with surface ring
+      data.forEach((d, i) => {
+        if (d.formula > 0) {
+          s += `<circle cx="${x(i)}" cy="${y(d.formula)}" r="5" fill="var(--chart-surface)"/>`;
+          s += `<circle cx="${x(i)}" cy="${y(d.formula)}" r="3.5" fill="var(--chart-formula)"/>`;
+        }
+        if (d.total > 0) {
+          s += `<circle cx="${x(i)}" cy="${y(d.total)}" r="5" fill="var(--chart-surface)"/>`;
+          s += `<circle cx="${x(i)}" cy="${y(d.total)}" r="3.5" fill="var(--chart-expressed)"/>`;
+        }
+      });
+      // End label
+      const last = data[data.length - 1];
+      if (last.total > 0) {
+        s += `<text x="${x(data.length-1) + 8}" y="${y(last.total) + 4}" fill="var(--text-secondary)" font-size="10" font-weight="600" font-family="var(--font-body)">${last.total}</text>`;
+      }
+      return s;
+    });
+
+    wrap.innerHTML = svgContent + '<div class="chart-tooltip"></div>';
+    bindChartTooltips(wrap, data, true);
+  }
+
+  function renderTotalChart(wrap, data) {
+    let svgContent = buildSvgChart(data, 160, 3, (x, y) => {
+      let s = '';
+      if (data.length > 1) {
+        let ap = `M${x(0)},${y(data[0].total)}`;
+        for (let i = 1; i < data.length; i++) ap += `L${x(i)},${y(data[i].total)}`;
+        ap += `L${x(data.length-1)},${y(0)}L${x(0)},${y(0)}Z`;
+        s += `<path d="${ap}" fill="var(--chart-expressed)" opacity="0.08"/>`;
+        let lp = `M${x(0)},${y(data[0].total)}`;
+        for (let i = 1; i < data.length; i++) lp += `L${x(i)},${y(data[i].total)}`;
+        s += `<path d="${lp}" fill="none" stroke="var(--chart-total-line)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+      }
+      data.forEach((d, i) => {
+        if (d.total > 0) {
+          s += `<circle cx="${x(i)}" cy="${y(d.total)}" r="5" fill="var(--chart-surface)"/>`;
+          s += `<circle cx="${x(i)}" cy="${y(d.total)}" r="3.5" fill="var(--chart-total-line)"/>`;
+        }
+      });
+      const last = data[data.length - 1];
+      if (last.total > 0) {
+        s += `<text x="${x(data.length-1) + 8}" y="${y(last.total) + 4}" fill="var(--text-secondary)" font-size="10" font-weight="600" font-family="var(--font-body)">${last.total}</text>`;
+      }
+      return s;
+    });
+
+    wrap.innerHTML = svgContent + '<div class="chart-tooltip"></div>';
+    bindChartTooltips(wrap, data, false);
+  }
+
+  function renderWeeklyChart(wrap, wowRow) {
+    const numWeeks = chartRange <= 7 ? 4 : chartRange <= 14 ? 6 : 8;
+    const weeks = getWeeklyTotals(numWeeks);
+    const maxVal = Math.max(200, ...weeks.map(w => w.total)) * 1.12;
+    const W = 360, H = 200;
+    const pad = { top: 12, right: 12, bottom: 32, left: 40 };
+    const plotW = W - pad.left - pad.right;
+    const plotH = H - pad.top - pad.bottom;
+    const barGroupW = plotW / weeks.length;
+    const barW = Math.min(barGroupW * 0.6, 36);
+    const y = v => pad.top + plotH - (v / maxVal) * plotH;
+    const ticks = niceYTicks(maxVal, 4);
+
+    let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" class="chart-svg" style="overflow:visible">`;
+
+    // Gridlines
+    ticks.forEach(t => {
+      svg += `<line x1="${pad.left}" x2="${W - pad.right}" y1="${y(t)}" y2="${y(t)}" stroke="var(--chart-grid)" stroke-width="1"/>`;
+      svg += `<text x="${pad.left - 6}" y="${y(t) + 4}" text-anchor="end" fill="var(--text-muted)" font-size="10" font-family="var(--font-body)" style="font-variant-numeric:tabular-nums">${t}</text>`;
+    });
+    svg += `<line x1="${pad.left}" x2="${W - pad.right}" y1="${y(0)}" y2="${y(0)}" stroke="var(--chart-axis)" stroke-width="1"/>`;
+
+    // Stacked bars
+    weeks.forEach((w, i) => {
+      const cx = pad.left + barGroupW * i + barGroupW / 2;
+      const bx = cx - barW / 2;
+      if (w.total > 0) {
+        const formulaH = (w.formula / maxVal) * plotH;
+        const expressedH = (w.expressed / maxVal) * plotH;
+        const r = Math.min(4, barW / 2);
+        // Formula segment (bottom) - flat top, rounded bottom corners
+        if (w.formula > 0) {
+          svg += `<rect x="${bx}" y="${y(w.formula)}" width="${barW}" height="${formulaH}" fill="var(--chart-formula)" rx="0"/>`;
+          // Round only bottom corners
+          svg += `<rect x="${bx}" y="${y(0) - r}" width="${barW}" height="${r}" fill="var(--chart-formula)" rx="${r}"/>`;
+          svg += `<rect x="${bx}" y="${y(0) - r}" width="${barW}" height="${r / 2}" fill="var(--chart-formula)"/>`;
+        }
+        // Expressed segment (top) - rounded top corners, flat bottom
+        if (w.expressed > 0) {
+          const ey = y(w.total);
+          svg += `<rect x="${bx}" y="${ey + r}" width="${barW}" height="${expressedH - r}" fill="var(--chart-expressed)"/>`;
+          svg += `<rect x="${bx}" y="${ey}" width="${barW}" height="${r}" fill="var(--chart-expressed)" rx="${r}"/>`;
+          svg += `<rect x="${bx}" y="${ey + r / 2}" width="${barW}" height="${r / 2}" fill="var(--chart-expressed)"/>`;
+        }
+        // 2px surface gap between segments
+        if (w.formula > 0 && w.expressed > 0) {
+          svg += `<rect x="${bx}" y="${y(w.formula) - 1}" width="${barW}" height="2" fill="var(--chart-surface)"/>`;
+        }
+      }
+      // X label
+      svg += `<text x="${cx}" y="${H - 4}" text-anchor="middle" fill="var(--text-muted)" font-size="9" font-family="var(--font-body)">${w.shortLabel}</text>`;
+      // Hit target
+      svg += `<rect x="${bx - 4}" y="${pad.top}" width="${barW + 8}" height="${plotH}" fill="transparent" data-idx="${i}" class="chart-hit"/>`;
+    });
+
+    svg += '</svg>';
+    wrap.innerHTML = svg + '<div class="chart-tooltip"></div>';
+
+    // Tooltips
+    const svgEl = wrap.querySelector('svg');
+    const tooltip = wrap.querySelector('.chart-tooltip');
+    svgEl.querySelectorAll('.chart-hit').forEach(rect => {
+      const handler = (ev) => {
+        const w = weeks[parseInt(rect.dataset.idx, 10)];
+        tooltip.innerHTML = '';
+        const dateEl = document.createElement('div');
+        dateEl.className = 'tt-date';
+        dateEl.textContent = w.label + (w.isCurrent ? ' (this week)' : '');
+        tooltip.appendChild(dateEl);
+        [['Expressed', w.expressed, '--chart-expressed'], ['Formula', w.formula, '--chart-formula'], ['Total', w.total, '']].forEach(([label, val, color]) => {
+          const row = document.createElement('div');
+          row.className = 'tt-row';
+          if (color) row.innerHTML = '<span class="tt-swatch" style="background:var(' + color + ')"></span>';
+          const lbl = document.createElement('span');
+          lbl.className = 'tt-label'; lbl.textContent = label;
+          const v = document.createElement('span');
+          v.className = 'tt-val'; v.textContent = val + ' ml';
+          if (label === 'Total') { v.style.fontWeight = '700'; }
+          row.appendChild(lbl); row.appendChild(v);
+          tooltip.appendChild(row);
+        });
+        tooltip.classList.add('visible');
+        const rect2 = wrap.getBoundingClientRect();
+        let left = ev.clientX - rect2.left + 12;
+        let top = ev.clientY - rect2.top - 60;
+        if (left + 160 > rect2.width) left = ev.clientX - rect2.left - 160;
+        if (top < 0) top = 8;
+        tooltip.style.left = left + 'px';
+        tooltip.style.top = top + 'px';
+      };
+      rect.addEventListener('pointerenter', handler);
+      rect.addEventListener('pointermove', handler);
+      rect.addEventListener('pointerleave', () => tooltip.classList.remove('visible'));
+    });
+
+    // WoW summary tiles
+    const thisWeek = weeks[weeks.length - 1];
+    const lastWeek = weeks.length >= 2 ? weeks[weeks.length - 2] : null;
+    function wowDelta(curr, prev) {
+      if (!prev || prev === 0) return { pct: null, cls: 'flat', arrow: '' };
+      const pct = Math.round(((curr - prev) / prev) * 100);
+      if (pct > 0) return { pct: '+' + pct + '%', cls: 'up', arrow: '↑' };
+      if (pct < 0) return { pct: pct + '%', cls: 'down', arrow: '↓' };
+      return { pct: '0%', cls: 'flat', arrow: '→' };
+    }
+    const tiles = [
+      { label: 'This week', value: thisWeek.total, prev: lastWeek ? lastWeek.total : null },
+      { label: 'Expressed', value: thisWeek.expressed, prev: lastWeek ? lastWeek.expressed : null },
+      { label: 'Formula', value: thisWeek.formula, prev: lastWeek ? lastWeek.formula : null }
+    ];
+    wowRow.innerHTML = tiles.map(t => {
+      const d = wowDelta(t.value, t.prev);
+      return `<div class="wow-tile">
+        <div class="wow-tile-label">${t.label}</div>
+        <div class="wow-tile-value">${t.value}<span class="wow-tile-unit">ml</span></div>
+        ${d.pct !== null ? `<div class="wow-tile-delta ${d.cls}">${d.arrow} ${d.pct} vs last wk</div>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  function bindChartTooltips(wrap, data, isStacked) {
+    const svg = wrap.querySelector('svg');
+    const tooltip = wrap.querySelector('.chart-tooltip');
+    svg.querySelectorAll('.chart-hit').forEach(rect => {
+      const handler = (ev) => {
+        const d = data[parseInt(rect.dataset.idx, 10)];
+        tooltip.innerHTML = '';
+        const dateEl = document.createElement('div');
+        dateEl.className = 'tt-date';
+        dateEl.textContent = formatDateShort(d.date);
+        tooltip.appendChild(dateEl);
+
+        if (isStacked) {
+          [['Expressed', d.expressed, '--chart-expressed'], ['Formula', d.formula, '--chart-formula']].forEach(([label, val, color]) => {
+            const row = document.createElement('div');
+            row.className = 'tt-row';
+            row.innerHTML = '<span class="tt-swatch" style="background:var(' + color + ')"></span>';
+            const lbl = document.createElement('span');
+            lbl.className = 'tt-label'; lbl.textContent = label;
+            const v = document.createElement('span');
+            v.className = 'tt-val'; v.textContent = val + ' ml';
+            row.appendChild(lbl); row.appendChild(v);
+            tooltip.appendChild(row);
+          });
+        } else {
+          const row = document.createElement('div');
+          row.className = 'tt-row';
+          const lbl = document.createElement('span');
+          lbl.className = 'tt-label'; lbl.textContent = 'Total';
+          const v = document.createElement('span');
+          v.className = 'tt-val'; v.textContent = d.total + ' ml';
+          row.appendChild(lbl); row.appendChild(v);
+          tooltip.appendChild(row);
+        }
+
+        tooltip.classList.add('visible');
+        const rect2 = wrap.getBoundingClientRect();
+        let left = ev.clientX - rect2.left + 12;
+        let top = ev.clientY - rect2.top - 40;
+        if (left + 140 > rect2.width) left = ev.clientX - rect2.left - 140;
+        if (top < 0) top = 8;
+        tooltip.style.left = left + 'px';
+        tooltip.style.top = top + 'px';
+      };
+      rect.addEventListener('pointerenter', handler);
+      rect.addEventListener('pointermove', handler);
+      rect.addEventListener('pointerleave', () => tooltip.classList.remove('visible'));
+    });
+  }
+
+  function niceYTicks(maxVal, count) {
+    const raw = maxVal / count;
+    const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const nice = [1, 2, 2.5, 5, 10].find(n => n * mag >= raw) * mag;
+    const ticks = [];
+    for (let v = nice; v < maxVal; v += nice) ticks.push(Math.round(v));
+    return ticks;
+  }
+
+  // ── Initial render ──
+  renderToday();
+})();
+</script>
