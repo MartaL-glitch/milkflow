@@ -706,6 +706,44 @@ body {
   color: var(--text-secondary);
   margin-left: 1px;
 }
+.wow-tile-share {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+.wow-tile.expressed .wow-tile-share { color: var(--chart-expressed); }
+.wow-tile.formula .wow-tile-share { color: var(--chart-formula); }
+.tt-pct {
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-left: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.split-bar {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 16px;
+  background: var(--bg);
+}
+.split-bar-seg { height: 100%; }
+.split-bar-seg.expressed { background: var(--chart-expressed); }
+.split-bar-seg.formula { background: var(--chart-formula); }
+.split-legend {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.split-legend b {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
 .wow-tile-delta {
   font-size: 11px;
   font-weight: 600;
@@ -782,6 +820,57 @@ body {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
+
+/* ── Data / backup card ── */
+.data-card {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 1px 3px var(--shadow);
+  margin-top: 24px;
+}
+.data-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+.data-card-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+.data-btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.data-btn {
+  padding: 9px 14px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.data-btn:active { transform: scale(0.97); }
+.data-btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #FFF;
+}
+.data-stamp {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 12px;
+  padding-right: 64px; /* keep clear of the floating + button */
+}
+.data-stamp.warn { color: var(--danger); }
 </style>
 </head>
 <body>
@@ -824,6 +913,18 @@ body {
         <span id="entriesHeading">Today's entries</span>
       </div>
       <div id="entryList"></div>
+
+      <div class="data-card">
+        <div class="data-card-title">Your data</div>
+        <div class="data-card-subtitle">Every entry is stored only on this phone. Export a copy so it can never be lost.</div>
+        <div class="data-btn-row">
+          <button type="button" class="data-btn primary" id="exportCsvBtn">Export CSV</button>
+          <button type="button" class="data-btn" id="exportJsonBtn">Backup file</button>
+          <button type="button" class="data-btn" id="importBtn">Restore…</button>
+        </div>
+        <div class="data-stamp" id="backupStamp"></div>
+        <input type="file" id="importInput" accept=".json,.csv,application/json,text/csv" hidden>
+      </div>
     </section>
 
     <!-- ═══ CHARTS VIEW ═══ -->
@@ -1043,6 +1144,7 @@ body {
   // ── Render today view ──
   function renderToday() {
     updateDateNav();
+    renderBackupStamp();
     const data = loadData();
     const dayEntries = data.entries
       .filter(e => e.date === viewDate)
@@ -1369,6 +1471,16 @@ body {
     bindChartTooltips(wrap, data, false);
   }
 
+  // Share of total for each milk type. Rounds so the two always sum to 100%.
+  function milkShare(expressed, formula) {
+    const total = expressed + formula;
+    if (total <= 0) return { expressed: null, formula: null };
+    if (expressed === 0) return { expressed: 0, formula: 100 };
+    if (formula === 0) return { expressed: 100, formula: 0 };
+    const e = Math.round((expressed / total) * 100);
+    return { expressed: e, formula: 100 - e };
+  }
+
   function renderWeeklyChart(wrap, wowRow) {
     const numWeeks = chartRange <= 7 ? 4 : chartRange <= 14 ? 6 : 8;
     const weeks = getWeeklyTotals(numWeeks);
@@ -1438,7 +1550,8 @@ body {
         dateEl.className = 'tt-date';
         dateEl.textContent = w.label + (w.isCurrent ? ' (this week)' : '');
         tooltip.appendChild(dateEl);
-        [['Expressed', w.expressed, '--chart-expressed'], ['Formula', w.formula, '--chart-formula'], ['Total', w.total, '']].forEach(([label, val, color]) => {
+        const wShare = milkShare(w.expressed, w.formula);
+        [['Expressed', w.expressed, '--chart-expressed', wShare.expressed], ['Formula', w.formula, '--chart-formula', wShare.formula], ['Total', w.total, '', null]].forEach(([label, val, color, pct]) => {
           const row = document.createElement('div');
           row.className = 'tt-row';
           if (color) row.innerHTML = '<span class="tt-swatch" style="background:var(' + color + ')"></span>';
@@ -1448,6 +1561,11 @@ body {
           v.className = 'tt-val'; v.textContent = val + ' ml';
           if (label === 'Total') { v.style.fontWeight = '700'; }
           row.appendChild(lbl); row.appendChild(v);
+          if (pct !== null && pct !== undefined) {
+            const pctEl = document.createElement('span');
+            pctEl.className = 'tt-pct'; pctEl.textContent = pct + '%';
+            row.appendChild(pctEl);
+          }
           tooltip.appendChild(row);
         });
         tooltip.classList.add('visible');
@@ -1474,19 +1592,45 @@ body {
       if (pct < 0) return { pct: pct + '%', cls: 'down', arrow: '↓' };
       return { pct: '0%', cls: 'flat', arrow: '→' };
     }
+    const share = milkShare(thisWeek.expressed, thisWeek.formula);
+    const prevShare = lastWeek ? milkShare(lastWeek.expressed, lastWeek.formula) : { expressed: null, formula: null };
     const tiles = [
-      { label: 'This week', value: thisWeek.total, prev: lastWeek ? lastWeek.total : null },
-      { label: 'Expressed', value: thisWeek.expressed, prev: lastWeek ? lastWeek.expressed : null },
-      { label: 'Formula', value: thisWeek.formula, prev: lastWeek ? lastWeek.formula : null }
+      { label: 'This week', value: thisWeek.total, prev: lastWeek ? lastWeek.total : null, cls: '', share: null, prevShare: null },
+      { label: 'Expressed', value: thisWeek.expressed, prev: lastWeek ? lastWeek.expressed : null, cls: 'expressed', share: share.expressed, prevShare: prevShare.expressed },
+      { label: 'Formula', value: thisWeek.formula, prev: lastWeek ? lastWeek.formula : null, cls: 'formula', share: share.formula, prevShare: prevShare.formula }
     ];
-    wowRow.innerHTML = tiles.map(t => {
+    let html = tiles.map(t => {
       const d = wowDelta(t.value, t.prev);
-      return `<div class="wow-tile">
+      let shareLine = '';
+      if (t.share !== null) {
+        let ptDelta = '';
+        if (t.prevShare !== null) {
+          const diff = t.share - t.prevShare;
+          if (diff !== 0) ptDelta = ' <span style="color:var(--text-muted);font-weight:400">(' + (diff > 0 ? '+' : '') + diff + 'pt)</span>';
+        }
+        shareLine = `<div class="wow-tile-share">${t.share}% of total${ptDelta}</div>`;
+      }
+      return `<div class="wow-tile ${t.cls}">
         <div class="wow-tile-label">${t.label}</div>
         <div class="wow-tile-value">${t.value}<span class="wow-tile-unit">ml</span></div>
+        ${shareLine}
         ${d.pct !== null ? `<div class="wow-tile-delta ${d.cls}">${d.arrow} ${d.pct} vs last wk</div>` : ''}
       </div>`;
     }).join('');
+
+    if (share.expressed !== null) {
+      html += `<div style="flex:1 1 100%">
+        <div class="split-bar" role="img" aria-label="This week: ${share.expressed}% expressed, ${share.formula}% formula">
+          ${share.expressed > 0 ? `<div class="split-bar-seg expressed" style="width:${share.expressed}%"></div>` : ''}
+          ${share.formula > 0 ? `<div class="split-bar-seg formula" style="width:${share.formula}%"></div>` : ''}
+        </div>
+        <div class="split-legend">
+          <span><b>${share.expressed}%</b> expressed</span>
+          <span><b>${share.formula}%</b> formula</span>
+        </div>
+      </div>`;
+    }
+    wowRow.innerHTML = html;
   }
 
   function bindChartTooltips(wrap, data, isStacked) {
@@ -1547,6 +1691,188 @@ body {
     for (let v = nice; v < maxVal; v += nice) ticks.push(Math.round(v));
     return ticks;
   }
+
+  // ── Persistent storage request ──
+  if (navigator.storage && navigator.storage.persist) {
+    navigator.storage.persisted().then(already => {
+      if (!already) navigator.storage.persist().catch(() => {});
+    }).catch(() => {});
+  }
+
+  // ── Export / import ──
+  const TYPE_LABEL = { expressed: 'Expressed', formula: 'Formula' };
+
+  function sortedEntries() {
+    return loadData().entries.slice().sort((a, b) =>
+      (a.date + 'T' + a.time).localeCompare(b.date + 'T' + b.time));
+  }
+
+  function csvCell(v) {
+    return '"' + String(v).replace(/"/g, '""') + '"';
+  }
+
+  function buildCsv() {
+    const rows = [['Date', 'Time', 'Type', 'Milliliters']];
+    sortedEntries().forEach(e => {
+      rows.push([e.date, formatTime(e.time), TYPE_LABEL[e.type] || e.type, e.ml]);
+    });
+    // BOM so Excel / Numbers open it as UTF-8
+    return '\ufeff' + rows.map(r => r.map(csvCell).join(',')).join('\r\n') + '\r\n';
+  }
+
+  function buildJson() {
+    return JSON.stringify({
+      app: 'milkflow',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      entries: sortedEntries()
+    }, null, 2);
+  }
+
+  function downloadFile(filename, text, mime) {
+    const blob = new Blob([text], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }
+
+  function markBackedUp() {
+    try { localStorage.setItem('milkflow_last_backup', new Date().toISOString()); } catch (e) {}
+    renderBackupStamp();
+  }
+
+  function renderBackupStamp() {
+    const el = $('backupStamp');
+    if (!el) return;
+    const n = loadData().entries.length;
+    let stamp;
+    try { stamp = localStorage.getItem('milkflow_last_backup'); } catch (e) {}
+    const count = n + (n === 1 ? ' entry' : ' entries') + ' stored';
+    if (!stamp) {
+      el.textContent = count + ' \u00b7 never exported';
+      el.classList.add('warn');
+      return;
+    }
+    const days = Math.floor((Date.now() - new Date(stamp).getTime()) / 86400000);
+    const when = days <= 0 ? 'today' : days === 1 ? 'yesterday' : days + ' days ago';
+    el.textContent = count + ' \u00b7 last exported ' + when;
+    el.classList.toggle('warn', days >= 14);
+  }
+
+  $('exportCsvBtn').addEventListener('click', () => {
+    if (!loadData().entries.length) { showToast('Nothing to export yet'); return; }
+    downloadFile('milkflow-' + todayStr() + '.csv', buildCsv(), 'text/csv;charset=utf-8');
+    markBackedUp();
+    showToast('CSV exported');
+  });
+
+  $('exportJsonBtn').addEventListener('click', () => {
+    if (!loadData().entries.length) { showToast('Nothing to export yet'); return; }
+    downloadFile('milkflow-backup-' + todayStr() + '.json', buildJson(), 'application/json');
+    markBackedUp();
+    showToast('Backup saved');
+  });
+
+  // ── Restore ──
+  function parseCsv(text) {
+    const out = [];
+    const lines = text.replace(/^\ufeff/, '').split(/\r?\n/).filter(l => l.trim());
+    lines.shift(); // header
+    lines.forEach(line => {
+      const cells = [];
+      let cur = '', inQ = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (inQ) {
+          if (c === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+          else if (c === '"') inQ = false;
+          else cur += c;
+        } else if (c === '"') inQ = true;
+        else if (c === ',') { cells.push(cur); cur = ''; }
+        else cur += c;
+      }
+      cells.push(cur);
+      const [date, time, type, ml] = cells.map(s => s.trim());
+      const n = parseInt(ml, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !n) return;
+      out.push({
+        date: date,
+        time: /^\d{1,2}:\d{2}$/.test(time) ? time.padStart(5, '0') : '12:00',
+        type: /formula/i.test(type) ? 'formula' : 'expressed',
+        ml: n
+      });
+    });
+    return out;
+  }
+
+  function normalise(list) {
+    return list.filter(e => e && e.date && e.ml > 0).map(e => ({
+      id: e.id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 6)),
+      type: e.type === 'formula' ? 'formula' : 'expressed',
+      date: e.date,
+      time: e.time || '12:00',
+      ml: parseInt(e.ml, 10)
+    }));
+  }
+
+  $('importBtn').addEventListener('click', () => $('importInput').click());
+
+  $('importInput').addEventListener('change', ev => {
+    const file = ev.target.files && ev.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      let incoming = [];
+      try {
+        const text = String(reader.result);
+        if (/\.csv$/i.test(file.name)) {
+          incoming = parseCsv(text);
+        } else {
+          const parsed = JSON.parse(text);
+          incoming = Array.isArray(parsed) ? parsed : (parsed.entries || []);
+        }
+      } catch (e) {
+        showToast('Could not read that file');
+        ev.target.value = '';
+        return;
+      }
+
+      incoming = normalise(incoming);
+      if (!incoming.length) { showToast('No entries found in file'); ev.target.value = ''; return; }
+
+      const data = loadData();
+      // Merge, skipping anything already present (same day + time + type + ml)
+      const seen = {};
+      data.entries.forEach(e => { seen[e.date + e.time + e.type + e.ml] = true; });
+      let added = 0;
+      incoming.forEach(e => {
+        const key = e.date + e.time + e.type + e.ml;
+        if (seen[key]) return;
+        seen[key] = true;
+        data.entries.push(e);
+        added++;
+      });
+
+      const skipped = incoming.length - added;
+      if (!confirm('Restore ' + added + ' entr' + (added === 1 ? 'y' : 'ies') +
+          (skipped ? ' (' + skipped + ' already logged)' : '') + '?\n\nYour existing entries are kept.')) {
+        ev.target.value = '';
+        return;
+      }
+
+      saveData(data);
+      renderToday();
+      showToast(added ? 'Restored ' + added + ' entries' : 'Everything was already logged');
+      ev.target.value = '';
+    };
+    reader.readAsText(file);
+  });
 
   // ── Initial render ──
   renderToday();
